@@ -1,0 +1,164 @@
+# todo_plus.py
+# console-based to-do list application with task status.
+
+import os
+
+# --- Configuration ---
+FILENAME = "tasks_plus.txt"
+
+# --- Core Functions ---
+
+def load_tasks(filename):
+    """
+    ## MODIFIED
+    Loads tasks from the specified text file.
+    Returns a list of tasks. If the file doesn't exist, returns an empty list.
+    """
+    tasks = []
+    try:
+        with open(filename, 'r') as f:
+            tasks = [line.strip() for line in f.readlines()]
+    except FileNotFoundError:
+        pass
+    return tasks
+
+def save_tasks(tasks, filename):
+    """
+    Saves the current list of tasks to the specified text file.
+    """
+    with open(filename, 'w') as f:
+        for task in tasks:
+            f.write(task + '\n')
+
+def view_tasks(tasks):
+    """
+    ## MODIFIED
+    Prints the list of tasks to the console with status and numbering.
+    """
+    print("\n--- Your To-Do List ---")
+    if not tasks:
+        print("Your to-do list is empty.")
+    else:
+        for i, task in enumerate(tasks, 1):
+            print(f"{i}. {task}")
+    print("-------------------------\n")
+
+def add_task(tasks, filename):
+    """
+    ## MODIFIED
+    Prompts for a new task, adds it with a '[ ]' pending status, and saves.
+    """
+    task_text = input("Enter a new task: ")
+    if task_text:
+        # Add the task with a pending status prefix
+        task_with_status = f"[ ] {task_text}"
+        tasks.append(task_with_status)
+        save_tasks(tasks, filename)
+        print(f"\n✅ Task '{task_text}' added.")
+    else:
+        print("\nTask cannot be empty.")
+
+def remove_task(tasks, filename):
+    """
+    Displays the list and prompts the user to enter the
+    number of the task to remove. Saves the updated list.
+    """
+    view_tasks(tasks)
+    if not tasks:
+        return
+
+    try:
+        task_num_str = input("Enter the number of the task to REMOVE: ")
+        task_num = int(task_num_str)
+
+        if 1 <= task_num <= len(tasks):
+            index_to_remove = task_num - 1
+            removed_task = tasks.pop(index_to_remove)
+            save_tasks(tasks, filename)
+            # We show the text part of the task, without the [ ] or [x]
+            print(f"\n✅ Task '{removed_task[4:]}' removed permanently.")
+        else:
+            print("\nInvalid task number.")
+    except ValueError:
+        print("\nInvalid input. Please enter a number.")
+
+## NEW - Function to mark a task as complete
+def mark_task_complete(tasks, filename):
+    """
+    Displays the list and prompts the user to enter the
+    number of the task to mark as complete.
+    """
+    view_tasks(tasks)
+    if not tasks:
+        return
+
+    try:
+        task_num_str = input("Enter the number of the task to mark as COMPLETE: ")
+        task_num = int(task_num_str)
+
+        if 1 <= task_num <= len(tasks):
+            index_to_update = task_num - 1
+            
+            # Check if it's already complete
+            if tasks[index_to_update].startswith('[x]'):
+                print("\nThis task is already marked as complete!")
+                return
+            
+            # Rebuild the string with the new prefix
+            task_text = tasks[index_to_update][4:] # Get text after '[ ] '
+            tasks[index_to_update] = f"[x] {task_text}"
+            
+            save_tasks(tasks, filename)
+            print(f"\n Task '{task_text}' marked as complete!")
+        else:
+            print("\nInvalid task number.")
+    except ValueError:
+        print("\nInvalid input. Please enter a number.")
+
+
+def clear_screen():
+    """Clears the terminal screen."""
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def show_menu():
+    """
+    ## MODIFIED
+    Prints the main menu options.
+    """
+    print("===== To-Do List Manager =====")
+    print("1. View Tasks")
+    print("2. Add Task")
+    print("3. Mark Task as Complete") # New option
+    print("4. Remove Task")
+    print("5. Exit")
+    print("==============================")
+
+# --- Main Application Loop ---
+
+def main():
+    tasks = load_tasks(FILENAME)
+    
+    while True:
+        show_menu()
+        choice = input("Enter your choice (1-5): ")
+
+        if choice == '1':
+            view_tasks(tasks)
+        elif choice == '2':
+            add_task(tasks, FILENAME)
+        elif choice == '3':
+            ## NEW - Call the new function
+            mark_task_complete(tasks, filename)
+        elif choice == '4':
+            remove_task(tasks, filename)
+        elif choice == '5':
+            print("\nGoodbye")
+            break
+        else:
+            print("\nInvalid choice. Please enter a number from 1 to 5.")
+        
+        input("\nPress Enter to continue...")
+        clear_screen()
+
+if __name__ == "__main__":
+    main()
